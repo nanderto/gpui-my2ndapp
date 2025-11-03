@@ -1,6 +1,8 @@
 use crate::ui::{MenuBar, StatusBar, Sidebar, MainContent, BottomPanel};
-use gpui::{Context, Window, div, prelude::*, rgb, px, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent};
+use crate::state::{AppState, TabState};
+use gpui::{Context, Window, div, prelude::*, rgb, px, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, KeyDownEvent};
 
+#[derive(Debug)]
 pub struct IDEApplication {
     pub selected_left_tab: usize,
     pub selected_main_tab: usize,
@@ -11,6 +13,8 @@ pub struct IDEApplication {
     pub is_dragging_bottom_divider: bool,
     pub drag_start_x: Option<f32>,
     pub drag_start_y: Option<f32>,
+    pub open_tabs: Vec<TabState>,
+    pub app_state: AppState,
 }
 
 impl IDEApplication {
@@ -18,17 +22,25 @@ impl IDEApplication {
     pub const STATUS_BAR_HEIGHT: f32 = 22.0;
 
     pub fn new() -> Self {
+        let app_state = AppState::load();
         Self {
-            selected_left_tab: 0,
-            selected_main_tab: 0,
-            selected_bottom_tab: 0,
-            left_panel_width: 300.0,
-            bottom_panel_height: 200.0,
+            selected_left_tab: app_state.panel_state.selected_left_tab,
+            selected_main_tab: app_state.panel_state.selected_main_tab,
+            selected_bottom_tab: app_state.panel_state.selected_bottom_tab,
+            left_panel_width: app_state.panel_state.left_panel_width,
+            bottom_panel_height: app_state.panel_state.bottom_panel_height,
             is_dragging_left_divider: false,
             is_dragging_bottom_divider: false,
             drag_start_x: None,
             drag_start_y: None,
+            open_tabs: app_state.open_tabs.clone(),
+            app_state,
         }
+    }
+
+    pub fn get_window_bounds(&self) -> (f32, f32, f32, f32, bool) {
+        let wb = &self.app_state.window_bounds;
+        (wb.x, wb.y, wb.width, wb.height, wb.is_maximized)
     }
 
     pub fn start_left_divider_drag(&mut self, x: f32) {
@@ -68,6 +80,35 @@ impl IDEApplication {
         self.is_dragging_bottom_divider = false;
         self.drag_start_x = None;
         self.drag_start_y = None;
+        self.update_app_state();
+    }
+
+    pub fn update_app_state(&mut self) {
+        self.app_state.update_panel_state(
+            self.left_panel_width,
+            self.bottom_panel_height,
+            self.selected_left_tab,
+            self.selected_main_tab,
+            self.selected_bottom_tab,
+        );
+    }
+
+    pub fn save_state(&mut self, window: &Window) -> Result<(), Box<dyn std::error::Error>> {
+        // Get current window bounds
+        let bounds = window.bounds();
+        self.app_state.update_window_bounds(
+            bounds.origin.x.into(),
+            bounds.origin.y.into(), 
+            bounds.size.width.into(),
+            bounds.size.height.into(),
+            window.is_maximized(),
+        );
+        
+        // Update panel state
+        self.update_app_state();
+        
+        // Save to file
+        self.app_state.save()
     }
 
     fn render_vertical_divider(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -135,8 +176,22 @@ impl Render for IDEApplication {
                     app.update_bottom_panel_height(event.position.y.into());
                 }
             }))
-            .on_mouse_up(MouseButton::Left, cx.listener(|app, _event: &MouseUpEvent, _window, _cx| {
+            .on_mouse_up(MouseButton::Left, cx.listener(|app, _event: &MouseUpEvent, window, _cx| {
                 app.stop_dragging();
+                // Save state after dragging operations
+                if let Err(e) = app.save_state(window) {
+                    eprintln!("Failed to save state after drag: {}", e);
+                }
+            }))
+            .on_key_down(cx.listener(|app, event: &KeyDownEvent, window, _cx| {
+                // Ctrl+S to save state manually  
+                if event.keystroke.modifiers.control && event.keystroke.key == "s" {
+                    if let Err(e) = app.save_state(window) {
+                        eprintln!("Failed to save state: {}", e);
+                    } else {
+                        println!("State saved manually via Ctrl+S");
+                    }
+                }
             }))
             .child(MenuBar::new(self).render(window))
             .child(

@@ -1209,6 +1209,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "directories"
+version = "5.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a49173b84e034382284f27f1af4dcbbd231ffa358c0fe316541a7337f376a35"
+dependencies = [
+ "dirs-sys 0.4.1",
+]
+
+[[package]]
 name = "dirs"
 version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2081,7 +2090,10 @@ dependencies = [
 name = "gpui-my2ndapp"
 version = "0.1.0"
 dependencies = [
+ "directories",
  "gpui",
+ "serde",
+ "serde_json",
  "windows 0.62.2",
 ]
 

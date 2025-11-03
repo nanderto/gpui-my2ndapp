@@ -23,9 +23,15 @@ impl<'a> MainContent<'a> {
                     .bg(rgb(0x2d2d30))
                     .border_b_1()
                     .border_color(rgb(0x3e3e42))
-                    .child(self.render_horizontal_tab("main.rs", 0, true))
-                    .child(self.render_horizontal_tab("Cargo.toml", 1, false))
-                    .child(self.render_horizontal_tab("README.md", 2, false))
+                    .children(
+                        self.app.open_tabs.iter().enumerate().map(|(index, tab)| {
+                            self.render_horizontal_tab(
+                                &tab.name,
+                                index,
+                                index == self.app.selected_main_tab
+                            )
+                        })
+                    )
             )
             .child(
                 // Content area
@@ -36,7 +42,7 @@ impl<'a> MainContent<'a> {
             )
     }
 
-    fn render_horizontal_tab(&self, title: &str, _index: usize, is_active: bool) -> impl IntoElement {
+    fn render_horizontal_tab(&self, title: &str, index: usize, is_active: bool) -> impl IntoElement {
         let title = title.to_string();
         div()
             .flex()
