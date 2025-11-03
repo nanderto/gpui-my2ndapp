@@ -2,6 +2,7 @@ use crate::app::IDEApplication;
 use gpui::{div, prelude::*, rgb};
 
 pub struct InputPanel<'a> {
+    #[allow(dead_code)] // Will be used for settings and input forms
     app: &'a IDEApplication,
 }
 

@@ -2,6 +2,7 @@ use crate::app::IDEApplication;
 use gpui::{div, prelude::*, px, rgb};
 
 pub struct FileTree<'a> {
+    #[allow(dead_code)] // Will be used for file system integration
     app: &'a IDEApplication,
 }
 

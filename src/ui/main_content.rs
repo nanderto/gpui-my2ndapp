@@ -42,7 +42,7 @@ impl<'a> MainContent<'a> {
             )
     }
 
-    fn render_horizontal_tab(&self, title: &str, index: usize, is_active: bool) -> impl IntoElement {
+    fn render_horizontal_tab(&self, title: &str, _index: usize, is_active: bool) -> impl IntoElement {
         let title = title.to_string();
         div()
             .flex()

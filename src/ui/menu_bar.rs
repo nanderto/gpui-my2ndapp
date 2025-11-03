@@ -2,6 +2,7 @@ use crate::app::IDEApplication;
 use gpui::{div, prelude::*, px, rgb, Window, WindowControlArea};
 
 pub struct MenuBar<'a> {
+    #[allow(dead_code)] // Will be used for menu functionality
     app: &'a IDEApplication,
 }
 

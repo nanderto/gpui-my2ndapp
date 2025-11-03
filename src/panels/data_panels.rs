@@ -2,6 +2,7 @@ use crate::app::IDEApplication;
 use gpui::{div, prelude::*, rgb};
 
 pub struct DataPanels<'a> {
+    #[allow(dead_code)] // Will be used for database/API integration
     app: &'a IDEApplication,
 }
 

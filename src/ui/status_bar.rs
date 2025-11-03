@@ -2,6 +2,7 @@ use crate::app::IDEApplication;
 use gpui::{div, prelude::*, px, rgb};
 
 pub struct StatusBar<'a> {
+    #[allow(dead_code)] // Will be used for status information
     app: &'a IDEApplication,
 }
 
